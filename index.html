@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подарок для Айман</title>
+  <style>
+    body { margin: 0; background: #f5f5f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
+    #content { max-width: 90vw; max-height: 90vh; }
+    video, img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <script>
+    const materials = [
+      '<video controls autoplay><source src="1.mp4" type="video/mp4">Ваш браузер не поддерживает видео.</video>',
+      '<img src="2.png" alt="Картина">',
+      '<img src="3.png" alt="Письмо">'
+    ];
+
+    let current = 0;
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = materials[current];
+
+    let lastShake = Date.now();
+
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          window.addEventListener('devicemotion', handleMotion);
+        } else {
+          alert('Для работы требуется доступ к датчику движения.');
+        }
+      }).catch(console.error);
+    } else {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+
+    function handleMotion(event) {
+      const acc = event.accelerationIncludingGravity;
+      const totalAcc = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+
+      if (totalAcc > 20) {
+        const now = Date.now();
+        if (now - lastShake > 1000) {
+          current = (current + 1) % materials.length;
+          contentDiv.innerHTML = materials[current];
+          lastShake = now;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
