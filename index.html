@@ -2,120 +2,138 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Подарок для Шолпан</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подарок для Айман</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #000;
-      position: relative;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
-    video, img {
-      max-width: 90%;
-      display: block;
-      margin: 20px auto;
+    #content {
       position: relative;
       z-index: 1;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+    video, img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
     canvas {
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 3;
       pointer-events: none;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-
-  <video id="video" src="1.mp4" controls autoplay></video>
-  <img id="img1" src="2.png" style="display:none;" />
-  <img id="img2" src="3.png" style="display:none;" />
-
-  <audio autoplay loop>
+  <!-- Музыка -->
+  <audio id="bgMusic" autoplay loop>
     <source src="BiBi - Kazino.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио.
   </audio>
 
-  <canvas id="stars"></canvas>
+  <!-- Контент -->
+  <div id="content"></div>
+
+  <!-- Звёзды -->
+  <canvas id="sparkCanvas"></canvas>
 
   <script>
-    // Инициализация звёзд
-    const canvas = document.getElementById('stars');
-    const ctx = canvas.getContext('2d');
-    let w = canvas.width = window.innerWidth;
-    let h = canvas.height = window.innerHeight;
+    // Фоновая музыка для iOS
+    document.addEventListener('click', () => {
+      document.getElementById('bgMusic').play();
+    }, { once: true });
 
-    window.addEventListener('resize', () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    });
+    // Контент
+    const materials = [
+      '<video controls autoplay><source src="1.mp4" type="video/mp4">Ваш браузер не поддерживает видео.</video>',
+      '<img src="2.png" alt="Картина">',
+      '<img src="3.png" alt="Письмо">'
+    ];
 
-    const stars = Array(100).fill().map(() => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.5 + 0.5,
-      dx: (Math.random() - 0.5) * 0.5,
-      dy: (Math.random() - 0.5) * 0.5
-    }));
+    let current = 0;
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = materials[current];
 
-    function drawStars() {
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "white";
-      stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-        ctx.fill();
+    let lastShake = Date.now();
 
-        star.x += star.dx;
-        star.y += star.dy;
-
-        if (star.x < 0) star.x = w;
-        if (star.x > w) star.x = 0;
-        if (star.y < 0) star.y = h;
-        if (star.y > h) star.y = 0;
-      });
-      requestAnimationFrame(drawStars);
-    }
-    drawStars();
-
-    // Обработка встряхивания
-    let state = 0; 
-    if (window.DeviceMotionEvent) {
-      let lastX, lastY, lastZ;
-      let threshold = 15; // сила встряхивания
-
-      window.addEventListener("devicemotion", function(event) {
-        let acc = event.accelerationIncludingGravity;
-        if (!acc) return;
-
-        if (lastX !== null) {
-          let deltaX = Math.abs(acc.x - lastX);
-          let deltaY = Math.abs(acc.y - lastY);
-          let deltaZ = Math.abs(acc.z - lastZ);
-
-          if (deltaX + deltaY + deltaZ > threshold) {
-            changeContent();
-          }
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          window.addEventListener('devicemotion', handleMotion);
+        } else {
+          alert('Для работы требуется доступ к датчику движения.');
         }
-        lastX = acc.x;
-        lastY = acc.y;
-        lastZ = acc.z;
-      });
+      }).catch(console.error);
     } else {
-      console.log("DeviceMotionEvent не поддерживается");
+      window.addEventListener('devicemotion', handleMotion);
     }
 
-    function changeContent() {
-      if (state === 0) {
-        document.getElementById("video").style.display = "none";
-        document.getElementById("img1").style.display = "block";
-        state = 1;
-      } else if (state === 1) {
-        document.getElementById("img1").style.display = "none";
-        document.getElementById("img2").style.display = "block";
-        state = 2;
+    function handleMotion(event) {
+      const acc = event.accelerationIncludingGravity;
+      const totalAcc = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+
+      if (totalAcc > 20) {
+        const now = Date.now();
+        if (now - lastShake > 1000) {
+          current = (current + 1) % materials.length;
+          contentDiv.innerHTML = materials[current];
+          lastShake = now;
+        }
       }
     }
+
+    // Звёзды
+    const canvas = document.getElementById('sparkCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    const sparks = [];
+    for (let i = 0; i < 100; i++) {
+      sparks.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        dx: (Math.random() - 0.5) * 2,
+        dy: (Math.random() - 0.5) * 2,
+        size: Math.random() * 2 + 1,
+        color: 'white'
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let s of sparks) {
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        s.x += s.dx;
+        s.y += s.dy;
+
+        if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
+        if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
   </script>
 </body>
 </html>
