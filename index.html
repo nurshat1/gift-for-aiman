@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Подарок для Шолпан</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      background: #000; /* можно сменить фон если нужно */
+      background: #000;
       position: relative;
     }
     video, img {
       max-width: 90%;
-      height: auto;
       display: block;
       margin: 20px auto;
       position: relative;
@@ -22,15 +21,17 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 2; /* звезды поверх */
+      z-index: 3;
       pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <video src="1.mp4" controls></video>
-  <img src="2.png" alt="Картинка 1" />
-  <img src="3.png" alt="Картинка 2" />
+
+  <video id="video" src="1.mp4" controls autoplay></video>
+  <img id="img1" src="2.png" style="display:none;" />
+  <img id="img2" src="3.png" style="display:none;" />
+
   <audio autoplay loop>
     <source src="BiBi - Kazino.mp3" type="audio/mpeg">
   </audio>
@@ -38,6 +39,7 @@
   <canvas id="stars"></canvas>
 
   <script>
+    // Инициализация звёзд
     const canvas = document.getElementById('stars');
     const ctx = canvas.getContext('2d');
     let w = canvas.width = window.innerWidth;
@@ -74,8 +76,46 @@
       });
       requestAnimationFrame(drawStars);
     }
-
     drawStars();
+
+    // Обработка встряхивания
+    let state = 0; 
+    if (window.DeviceMotionEvent) {
+      let lastX, lastY, lastZ;
+      let threshold = 15; // сила встряхивания
+
+      window.addEventListener("devicemotion", function(event) {
+        let acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        if (lastX !== null) {
+          let deltaX = Math.abs(acc.x - lastX);
+          let deltaY = Math.abs(acc.y - lastY);
+          let deltaZ = Math.abs(acc.z - lastZ);
+
+          if (deltaX + deltaY + deltaZ > threshold) {
+            changeContent();
+          }
+        }
+        lastX = acc.x;
+        lastY = acc.y;
+        lastZ = acc.z;
+      });
+    } else {
+      console.log("DeviceMotionEvent не поддерживается");
+    }
+
+    function changeContent() {
+      if (state === 0) {
+        document.getElementById("video").style.display = "none";
+        document.getElementById("img1").style.display = "block";
+        state = 1;
+      } else if (state === 1) {
+        document.getElementById("img1").style.display = "none";
+        document.getElementById("img2").style.display = "block";
+        state = 2;
+      }
+    }
   </script>
 </body>
 </html>
