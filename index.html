@@ -38,7 +38,7 @@
 <body>
   <!-- Музыка -->
   <audio id="bgMusic" autoplay loop>
-    <source src="BiBi - Kazino.mp3" type="audio/mpeg">
+    <source src="Bibi.mp3" type="audio/mpeg">
     Ваш браузер не поддерживает аудио.
   </audio>
 
@@ -93,7 +93,7 @@
       }
     }
 
-    // Звёзды
+    // Сияющие звёзды
     const canvas = document.getElementById('sparkCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
@@ -104,31 +104,29 @@
       canvas.height = window.innerHeight;
     });
 
-    const sparks = [];
+    const stars = [];
     for (let i = 0; i < 100; i++) {
-      sparks.push({
+      stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        dx: (Math.random() - 0.5) * 2,
-        dy: (Math.random() - 0.5) * 2,
-        size: Math.random() * 2 + 1,
-        color: 'white'
+        r: Math.random() * 2 + 1,
+        alpha: Math.random(),
+        delta: Math.random() * 0.02 + 0.005
       });
     }
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let s of sparks) {
-        ctx.fillStyle = s.color;
+      for (let star of stars) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
         ctx.fill();
 
-        s.x += s.dx;
-        s.y += s.dy;
-
-        if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
-        if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+        star.alpha += star.delta;
+        if (star.alpha <= 0 || star.alpha >= 1) {
+          star.delta = -star.delta;
+        }
       }
       requestAnimationFrame(animate);
     }
