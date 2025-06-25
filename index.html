@@ -55,7 +55,7 @@
 
   <!-- Музыка -->
   <audio id="bgMusic" autoplay loop>
-    <source src="BiBi - Kazino.mp3" type="audio/mpeg">
+    <source src="Bibi.mp3" type="audio/mpeg">
     Ваш браузер не поддерживает аудио.
   </audio>
 
@@ -66,6 +66,7 @@
   <canvas id="sparkCanvas"></canvas>
 
   <script>
+    // Фоновая музыка для iOS
     document.addEventListener('click', () => {
       document.getElementById('bgMusic').play();
       requestMotionPermission();
